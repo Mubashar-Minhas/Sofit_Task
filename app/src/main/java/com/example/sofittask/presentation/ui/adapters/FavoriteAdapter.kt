@@ -9,8 +9,9 @@ import com.example.sofittask.R
 import com.example.sofittask.databinding.ItemRecyclerviewBinding
 
 import com.example.sofittask.presentation.ui.model.DrinksDataModel
+import com.example.sofittask.viewmodels.FavoritesViewModel
 
-class FavoriteAdapter : RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
+class FavoriteAdapter(favoritesViewModel: FavoritesViewModel) : RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
     private var favoriteList: List<DrinksDataModel>? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteViewHolder {

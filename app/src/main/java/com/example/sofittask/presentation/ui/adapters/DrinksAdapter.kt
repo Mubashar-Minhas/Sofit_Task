@@ -46,60 +46,56 @@ class DrinksAdapter(private val itemClickListener: OnItemClickListener) :
 
     inner class DrinkViewHolder(private val binding: ItemRecyclerviewBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        val context = binding.root.context
+
+        private val context = binding.root.context
+
         fun bind(drink: DrinksDataModel) {
             // Bind data to the ViewHolder views
+            binding.apply {
+                drinkName.text = drink.strDrink
+                drinkDescription.text = drink.strInstructions
+                Glide.with(context)
+                    .load(drink.strDrinkThumb)
+                    .into(drinkImage)
 
-            binding.drinkName.text = drink.strDrink
-            binding.drinkDescription.text = drink.strInstructions
-            Glide.with(context)
-                .load(drink.strDrinkThumb)
-                /*.placeholder(R.drawable.placeholder)  / Option/al placeholder while loading
-                .error(R.drawable.error_image) */       // Optional error image if the load fails
-                .into(binding.drinkImage)
-
-            // Check if the current item is in the saved favorites list
-            val isFavorite = SharedPref.getFavorites(context).contains(drink)
-
-            // Set the star icon based on the favorite state
-            if (isFavorite) {
-                binding.mFavImage.setImageResource(R.drawable.star_yellow)
-            } else {
-                binding.mFavImage.setImageResource(R.drawable.ic_nav_favorite)
-            }
-
-            binding.mFavImage.setOnClickListener(View.OnClickListener {
-                binding.mFavImage.setImageResource(R.drawable.star_yellow)
-                itemClickListener.onItemClick(adapterPosition, drink)
-            })
-
-            //set check state
-            binding.mCheckBox.isChecked = drink.strAlcoholic == "Alcoholic"
-        }
-
-
-        init {
-            binding.mFavImage.setOnClickListener(View.OnClickListener {
-                // Toggle the favorite state
-                val drink = drinksList?.get(adapterPosition)
+                // Check if the current item is in the saved favorites list
                 val isFavorite = SharedPref.getFavorites(context).contains(drink)
 
-                val updatedFavorites = SharedPref.getFavorites(context).toMutableList()
+                // Set the star icon based on the favorite state
+                mFavImage.setImageResource(if (isFavorite) R.drawable.star_yellow else R.drawable.ic_nav_favorite)
+
+                // Set check state
+                mCheckBox.isChecked = drink.strAlcoholic == "Alcoholic"
+            }
+        }
+
+        init {
+            binding.mFavImage.setOnClickListener {
+                // Toggle the favorite state
+                val drink = drinksList?.get(adapterPosition)
+                val favorites = SharedPref.getFavorites(context).toMutableList()
+                val isFavorite = favorites.contains(drink)
+
                 if (isFavorite) {
-                    updatedFavorites.remove(drink)
+                    // Remove the item from favorites if it's already selected
+                    favorites.remove(drink)
                     binding.mFavImage.setImageResource(R.drawable.ic_nav_favorite)
                 } else {
-                    if (drink != null) {
-                        updatedFavorites.add(drink)
-                        binding.mFavImage.setImageResource(R.drawable.star_yellow)
-                    }
-
+                    // Add the item to favorites if it's not selected
+                    drink?.let { favorites.add(it) }
+                    binding.mFavImage.setImageResource(R.drawable.star_yellow)
                 }
 
                 // Save the updated favorites list to SharedPreferences
-                SharedPref.saveFavorites(context, updatedFavorites)
-            })
+               // SharedPref.saveFavorites(context, favorites)
 
+                // Notify the item click listener
+                if (drink != null) {
+                    itemClickListener.onItemClick(adapterPosition, drink)
+                }
+            }
         }
+
     }
+
 }

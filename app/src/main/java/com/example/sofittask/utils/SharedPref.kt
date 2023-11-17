@@ -19,11 +19,18 @@ object SharedPref {
     fun saveFavorite(context: Context, drink: DrinksDataModel) {
         val favoritesList = getFavorites(context).toMutableList()
 
-        if (!favoritesList.contains(drink)) {
+        if (favoritesList.contains(drink)) {
+            // Remove the item if it's already in favorites
+            favoritesList.remove(drink)
+        } else {
+            // Add the item if it's not in favorites
             favoritesList.add(drink)
-            saveFavorites(context, favoritesList)
         }
+
+        // Save the updated favorites list
+        saveFavorites(context, favoritesList)
     }
+
 
     fun saveFavorites(context: Context, favoritesList: List<DrinksDataModel>) {
         val editor = getSharedPreferences(context).edit()
