@@ -10,6 +10,7 @@ class FavoritesViewModel : ViewModel() {
     val favorites: LiveData<List<DrinksDataModel>> get() = _favorites
 
     fun updateFavorites(newFavorites: List<DrinksDataModel>) {
-        _favorites.value = newFavorites
+        _favorites.postValue(newFavorites)
     }
 }
+

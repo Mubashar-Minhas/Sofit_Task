@@ -11,7 +11,7 @@ import com.example.sofittask.databinding.ItemRecyclerviewBinding
 import com.example.sofittask.presentation.ui.model.DrinksDataModel
 import com.example.sofittask.viewmodels.FavoritesViewModel
 
-class FavoriteAdapter(favoritesViewModel: FavoritesViewModel) : RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
+class FavoriteAdapter : RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
     private var favoriteList: List<DrinksDataModel>? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteViewHolder {
@@ -32,6 +32,11 @@ class FavoriteAdapter(favoritesViewModel: FavoritesViewModel) : RecyclerView.Ada
     }
 
     fun setFavorites(favorites: List<DrinksDataModel>?) {
+        favoriteList = favorites
+        notifyDataSetChanged()
+    }
+
+    fun updateFavorite(favorites: List<DrinksDataModel>) {
         favoriteList = favorites
         notifyDataSetChanged()
     }

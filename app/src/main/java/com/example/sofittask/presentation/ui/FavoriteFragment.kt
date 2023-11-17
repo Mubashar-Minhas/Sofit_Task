@@ -32,26 +32,37 @@ class FavoriteFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = FragmentFavorite2Binding.inflate(inflater, container, false)
-        favoritesViewModel = ViewModelProvider(this)[FavoritesViewModel::class.java]
-        init()
+        favoritesViewModel = ViewModelProvider(requireActivity())[FavoritesViewModel::class.java]
+
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        init()
     }
 
     private fun init() {
         binding.mFragmentTitle.fragmentTitleTextView.text = getString(R.string.favorite_recipes)
-        mAdapter = FavoriteAdapter(favoritesViewModel)
+        mAdapter = FavoriteAdapter()
         binding.favoriteRecyclerView.apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(context)
             adapter = mAdapter
         }
 
+        val favoriteList = SharedPref.getFavorites(requireContext())
+        if (favoriteList.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Favorite list is empty", Toast.LENGTH_SHORT).show()
+        } else {
+            mAdapter.setFavorites(favoriteList)
+        }
 
 
         favoritesViewModel.favorites.observe(viewLifecycleOwner) { favorites ->
             if (favorites != null) {
                 // Check if favorites is not null before updating the adapter
-                mAdapter.setFavorites(favorites)
+                mAdapter.updateFavorite(favorites)
                 mAdapter.notifyDataSetChanged()
             } else {
                 // Log an error or show a toast to indicate that favorites is null
@@ -60,12 +71,10 @@ class FavoriteFragment : Fragment() {
             }
         }
 
-//        val favoriteList = SharedPref.getFavorites(requireContext())
-//        if (favoriteList.isNullOrEmpty()) {
-//            Toast.makeText(requireContext(), "Favorite list is empty", Toast.LENGTH_SHORT).show()
-//        } else {
-//            mAdapter.setFavorites(favoriteList)
-//        }
+        Log.d("list", null.toString())
+
+
+
     }
 
 
