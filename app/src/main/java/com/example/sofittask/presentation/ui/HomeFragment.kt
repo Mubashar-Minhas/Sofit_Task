@@ -9,34 +9,28 @@ import android.view.ViewGroup
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sofittask.R
-import com.example.sofittask.presentation.ui.adapters.DrinksAdapter
 import com.example.sofittask.databinding.FragmentHomeBinding
+import com.example.sofittask.presentation.ui.adapters.DrinksAdapter
 import com.example.sofittask.presentation.ui.interfaces.OnItemClickListener
 import com.example.sofittask.presentation.ui.model.DrinksDataModel
 import com.example.sofittask.utils.SharedPref
 import com.example.sofittask.viewmodels.DrinksByNameViewModel
 import com.example.sofittask.viewmodels.FavoritesViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
 
-
-
+@AndroidEntryPoint
 class HomeFragment : Fragment(), OnItemClickListener {
     private lateinit var binding: FragmentHomeBinding
     private lateinit var mAdapter: DrinksAdapter
-    private lateinit var mViewModel: DrinksByNameViewModel
-    private lateinit var favoritesViewModel: FavoritesViewModel
+    private val mViewModel: DrinksByNameViewModel by viewModels()
+    private val favoritesViewModel: FavoritesViewModel by activityViewModels()
     private var searchedText: String? = null
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,8 +44,8 @@ class HomeFragment : Fragment(), OnItemClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mViewModel = ViewModelProvider(this)[DrinksByNameViewModel::class.java]
-        favoritesViewModel = ViewModelProvider(requireActivity())[FavoritesViewModel::class.java]
+        //mViewModel = ViewModelProvider(this)[DrinksByNameViewModel::class.java]
+        //favoritesViewModel = ViewModelProvider(requireActivity())[FavoritesViewModel::class.java]
         init()
         initializeRecyclerView()
         initializeObservers()
@@ -115,6 +109,7 @@ class HomeFragment : Fragment(), OnItemClickListener {
 
     }
 
+
     private fun initializeRecyclerView() {
         mAdapter = DrinksAdapter(this)
         binding.drinksRecyclerView.apply {
@@ -122,8 +117,8 @@ class HomeFragment : Fragment(), OnItemClickListener {
             layoutManager = LinearLayoutManager(context)
             adapter = mAdapter
         }
-
     }
+
 
     private fun initializeObservers() {
         if (searchedText == null) {
@@ -137,52 +132,39 @@ class HomeFragment : Fragment(), OnItemClickListener {
 
     }
 
-    private fun drinksByFirstAlphabet(searchedText: String) {
-        mViewModel.fetchDrinksByFirstLetter(searchedText!!, false)
-            .observe(viewLifecycleOwner, Observer { kt ->
-                Log.d("list", kt.toString())
-                mAdapter.setData(kt)
-                mAdapter.notifyDataSetChanged()
-            })
-        mViewModel.mShowApiError.observe(viewLifecycleOwner, Observer {
-            // AlertDialog.Builder(this).setMessage(it).show()
-            Toast.makeText(requireContext(), it.toString(), Toast.LENGTH_SHORT).show()
-        })
-        mViewModel.mShowProgressBar.observe(viewLifecycleOwner, Observer { bt ->
-            if (bt) {
-                binding.progressBar.visibility = View.VISIBLE
-            } else {
-                binding.progressBar.visibility = View.GONE
-            }
-        })
-        mViewModel.mShowNetworkError.observe(viewLifecycleOwner, Observer {
-            //AlertDialog.Builder(this).setMessage(R.string.app_no_internet_msg).show()
-            Toast.makeText(requireContext(), "No Internet", Toast.LENGTH_SHORT).show()
 
-        })
+    private fun drinksByFirstAlphabet(searchedText: String) {
+        mViewModel.fetchDrinksByFirstLetter(searchedText, false).observe(viewLifecycleOwner) { drinksList ->
+            mAdapter.setData(drinksList)
+            mAdapter.notifyDataSetChanged()
+            Log.d("list", drinksList.toString())
+        }
+
+        observeViewModel()
     }
 
-    private fun drinksByName(searchedText: String) {
-        mViewModel.fetchDrinksByName(searchedText!!, false)
-            .observe(viewLifecycleOwner, Observer { kt ->
-                mAdapter.setData(kt)
-            })
-        mViewModel.mShowApiError.observe(viewLifecycleOwner, Observer {
-            // AlertDialog.Builder(this).setMessage(it).show()
-            Toast.makeText(requireContext(), it.toString(), Toast.LENGTH_SHORT).show()
-        })
-        mViewModel.mShowProgressBar.observe(viewLifecycleOwner, Observer { bt ->
-            if (bt) {
-                binding.progressBar.visibility = View.VISIBLE
-            } else {
-                binding.progressBar.visibility = View.GONE
-            }
-        })
-        mViewModel.mShowNetworkError.observe(viewLifecycleOwner, Observer {
-            //AlertDialog.Builder(this).setMessage(R.string.app_no_internet_msg).show()
-            Toast.makeText(requireContext(), "No Internet", Toast.LENGTH_SHORT).show()
+    private fun observeViewModel() {
+        mViewModel.mShowApiError.observe(viewLifecycleOwner) { errorMessage ->
+            Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+        }
 
-        })
+        mViewModel.mShowProgressBar.observe(viewLifecycleOwner) { showProgressBar ->
+            binding.progressBar.visibility = if (showProgressBar) View.VISIBLE else View.GONE
+        }
+
+        mViewModel.mShowNetworkError.observe(viewLifecycleOwner) {
+            Toast.makeText(requireContext(), "No Internet", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    private fun drinksByName(searchedText: String) {
+        mViewModel.fetchDrinksByName(searchedText, false).observe(viewLifecycleOwner) { drinksList ->
+            mAdapter.setData(drinksList)
+        }
+
+        // Observing common LiveData moved to a shared method
+        observeViewModel()
     }
 
     override fun onDestroy() {
@@ -190,13 +172,22 @@ class HomeFragment : Fragment(), OnItemClickListener {
 
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+    }
+
     override fun onItemClick(position: Int, clickedItem: DrinksDataModel) {
+        // Save the clicked item as a favorite
         SharedPref.saveFavorite(requireContext(), clickedItem)
 
-     if (SharedPref.getFavorites(requireContext()).isNotEmpty()){
-         Log.d("list", SharedPref.getFavorites(requireContext()).toString())
-         favoritesViewModel.updateFavorites(SharedPref.getFavorites(requireContext()))
+        // Retrieve the updated list of favorites
+        val favorites = SharedPref.getFavorites(requireContext())
 
-         }
-
-}}
+        // Check if the favorites list is not empty
+        if (favorites.isNotEmpty()) {
+            Log.d("list", favorites.toString())
+            // Update the favorites in the ViewModel
+            favoritesViewModel.updateFavorites(favorites)
+        }
+    }
+}

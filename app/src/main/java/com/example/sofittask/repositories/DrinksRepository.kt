@@ -1,36 +1,20 @@
 package com.example.sofittask.repositories
 
 import androidx.lifecycle.MutableLiveData
+import com.example.sofittask.network.ApiServices
 import com.example.sofittask.presentation.ui.interfaces.NetworkResponseCallback
 import com.example.sofittask.presentation.ui.model.DrinksContainer
 import com.example.sofittask.presentation.ui.model.DrinksDataModel
-import com.example.sofittask.network.RestClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class DrinksRepository private constructor() {
-    private lateinit var mCallback: NetworkResponseCallback
-    private var mDrinksList: MutableLiveData<List<DrinksDataModel>> =
-        MutableLiveData<List<DrinksDataModel>>().apply { value = emptyList() }
-    private var mDrinksList1: MutableLiveData<List<DrinksDataModel>> =
-        MutableLiveData<List<DrinksDataModel>>().apply { value = emptyList() }
-
-    companion object {
-        private var mInstance: DrinksRepository? = null
-        fun getInstance(): DrinksRepository {
-            if (mInstance == null) {
-                synchronized(this) {
-                    mInstance = DrinksRepository()
-                }
-            }
-            return mInstance!!
-        }
-    }
-
-    private lateinit var mDrinksCall: Call<DrinksContainer>
-
-
+@Singleton
+class DrinksRepository @Inject constructor(private val apiServices: ApiServices) {
+    private var mCallback: NetworkResponseCallback? = null
+    private val mDrinksList = MutableLiveData<List<DrinksDataModel>>()
 
     fun getDrinksByFirstLetter(
         callback: NetworkResponseCallback,
@@ -38,15 +22,12 @@ class DrinksRepository private constructor() {
         forceFetch: Boolean
     ): MutableLiveData<List<DrinksDataModel>> {
         mCallback = callback
-        mDrinksList.value= emptyList()
-        if (mDrinksList.value!!.isNotEmpty() && !forceFetch) {
-            mCallback.onNetworkSuccess()
-            return mDrinksList
+        if (!forceFetch && mDrinksList.value?.isNotEmpty() == true) {
+            mCallback?.onNetworkSuccess()
+        } else {
+            val call = apiServices.searchByFirstLetter(firstLetter)
+            enqueueDrinksCall(call)
         }
-
-        mDrinksCall = RestClient.getInstance().getApiService().searchByFirstLetter(firstLetter)
-        enqueueDrinksCall(mDrinksCall)
-
         return mDrinksList
     }
 
@@ -55,35 +36,39 @@ class DrinksRepository private constructor() {
         query: String,
         forceFetch: Boolean
     ): MutableLiveData<List<DrinksDataModel>> {
-        mDrinksList.value= emptyList()
         mCallback = callback
-        if (mDrinksList.value!!.isNotEmpty() && !forceFetch) {
-            mCallback.onNetworkSuccess()
-            return mDrinksList
+        if (!forceFetch && mDrinksList.value?.isNotEmpty() == true) {
+            mCallback?.onNetworkSuccess()
+        } else {
+            val call = apiServices.searchDrinksByName(query)
+            enqueueDrinksCall(call)
         }
-
-        mDrinksCall = RestClient.getInstance().getApiService().searchDrinksByName(query)
-        enqueueDrinksCall(mDrinksCall)
         return mDrinksList
     }
 
-    private fun enqueueDrinksCall(mDrinksCall: Call<DrinksContainer>) {
-        mDrinksCall.enqueue(object : Callback<DrinksContainer> {
+    private fun enqueueDrinksCall(call: Call<DrinksContainer>) {
+        call.enqueue(object : Callback<DrinksContainer> {
             override fun onResponse(
                 call: Call<DrinksContainer>,
                 response: Response<DrinksContainer>
             ) {
-                mDrinksList.value = response.body()?.drinks
-                mCallback.onNetworkSuccess()
+                if (response.isSuccessful) {
+                    mDrinksList.value = response.body()?.drinks
+                    mCallback?.onNetworkSuccess()
+                } else {
+                    mDrinksList.value = emptyList()
+                    mCallback?.onNetworkFailure(Throwable("Error: ${response.code()}"))
+                }
             }
 
             override fun onFailure(call: Call<DrinksContainer>, t: Throwable) {
                 mDrinksList.value = emptyList()
-                mCallback.onNetworkFailure(t)
+                mCallback?.onNetworkFailure(t)
             }
         })
     }
 }
+
 
 
 

@@ -7,12 +7,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.sofittask.R
 import com.example.sofittask.databinding.ItemRecyclerviewBinding
-
 import com.example.sofittask.presentation.ui.model.DrinksDataModel
-import com.example.sofittask.viewmodels.FavoritesViewModel
 
 class FavoriteAdapter : RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
-    private var favoriteList: List<DrinksDataModel>? = null
+    private var favoriteList: List<DrinksDataModel> = emptyList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteViewHolder {
         val binding =
@@ -32,7 +30,9 @@ class FavoriteAdapter : RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>
     }
 
     fun setFavorites(favorites: List<DrinksDataModel>?) {
-        favoriteList = favorites
+        if (favorites != null) {
+            favoriteList = favorites
+        }
         notifyDataSetChanged()
     }
 

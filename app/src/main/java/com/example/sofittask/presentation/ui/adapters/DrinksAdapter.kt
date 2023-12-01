@@ -1,7 +1,6 @@
 package com.example.sofittask.presentation.ui.adapters
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -13,7 +12,7 @@ import com.example.sofittask.utils.SharedPref
 
 class DrinksAdapter(private val itemClickListener: OnItemClickListener) :
     RecyclerView.Adapter<DrinksAdapter.DrinkViewHolder>() {
-    private var drinksList: List<DrinksDataModel>? = null
+    private var drinksList = listOf<DrinksDataModel>()
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DrinkViewHolder {
@@ -23,18 +22,20 @@ class DrinksAdapter(private val itemClickListener: OnItemClickListener) :
     }
 
     override fun onBindViewHolder(holder: DrinkViewHolder, position: Int) {
-        val drink = drinksList?.get(position)
+        val drink = drinksList.get(position)
         if (drink != null) {
             holder.bind(drink)
         }
     }
 
     override fun getItemCount(): Int {
-        return drinksList?.size!!
+        return drinksList.size
     }
 
     fun setData(drinks: List<DrinksDataModel>?) {
-        drinksList = drinks
+        if (drinks != null) {
+            drinksList = drinks
+        }
         notifyDataSetChanged()
 
     }
@@ -72,7 +73,7 @@ class DrinksAdapter(private val itemClickListener: OnItemClickListener) :
         init {
             binding.mFavImage.setOnClickListener {
                 // Toggle the favorite state
-                val drink = drinksList?.get(adapterPosition)
+                val drink = drinksList.get(adapterPosition)
                 val favorites = SharedPref.getFavorites(context).toMutableList()
                 val isFavorite = favorites.contains(drink)
 

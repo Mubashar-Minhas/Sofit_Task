@@ -5,12 +5,14 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.example.sofittask.presentation.ui.adapters.CustomPagerAdapter
 import com.example.sofittask.databinding.ActivityMainBinding
 import com.example.sofittask.databinding.CustomTabLayoutBinding
+import com.example.sofittask.presentation.ui.adapters.CustomPagerAdapter
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {

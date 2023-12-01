@@ -7,32 +7,29 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sofittask.R
-import com.example.sofittask.presentation.ui.adapters.FavoriteAdapter
 import com.example.sofittask.databinding.FragmentFavorite2Binding
+import com.example.sofittask.presentation.ui.adapters.FavoriteAdapter
 import com.example.sofittask.utils.SharedPref
 import com.example.sofittask.viewmodels.FavoritesViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class FavoriteFragment : Fragment() {
     private lateinit var binding: FragmentFavorite2Binding
     private lateinit var mAdapter: FavoriteAdapter
-    private lateinit var favoritesViewModel: FavoritesViewModel
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
+    // Use Hilt's delegated property to inject the ViewModel
+    private val favoritesViewModel: FavoritesViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
         binding = FragmentFavorite2Binding.inflate(inflater, container, false)
-        favoritesViewModel = ViewModelProvider(requireActivity())[FavoritesViewModel::class.java]
 
         return binding.root
     }
